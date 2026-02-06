@@ -305,88 +305,79 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 
     <script>
+        // 1. Initialize Lenis (Smooth Scroll)
         const lenis = new Lenis();
-        lenis.on('scroll', ScrollTrigger.update);
-        gsap.ticker.add((time) => {
-            lenis.raf(time * 1000);
-        });
-        gsap.ticker.lagSmoothing(0);
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
 
         gsap.registerPlugin(ScrollTrigger);
 
-        window.addEventListener('load', () => {
-            // Delay refresh slightly to ensure layout is stable
-            setTimeout(() => {
+        // 2. WAIT for the window to fully load before measuring layout
+        window.addEventListener("load", () => {
 
-                // Hero
-                const tlHero = gsap.timeline({ scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom center", scrub: 1 } });
-                tlHero.to(".nm-monogram", { scale: 3, opacity: 0, y: -100, filter: "blur(10px)" }, 0);
-                tlHero.to(".hero-bg-img", { scale: 1.2, opacity: 0.3 }, 0);
-                tlHero.to(".hero-text", { opacity: 1, y: -50 }, 0.2);
+            // Force a refresh to ensure all positions are correct after images load
+            ScrollTrigger.refresh();
 
-                // Nav
-                gsap.to(".header-nav", { scrollTrigger: { trigger: "#hero", start: "bottom top", toggleActions: "play none none reverse" }, opacity: 1 });
+            // Hero Animation
+            const tlHero = gsap.timeline({ scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom center", scrub: 1 } });
+            tlHero.to(".nm-monogram", { scale: 3, opacity: 0, y: -100, filter: "blur(10px)" }, 0);
+            tlHero.to(".hero-bg-img", { scale: 1.2, opacity: 0.3 }, 0);
+            tlHero.to(".hero-text", { opacity: 1, y: -50 }, 0.2);
 
-                // About
-                gsap.from(".about-img-container", { scrollTrigger: { trigger: "#about", start: "top 80%" }, x: -50, opacity: 0, duration: 1 });
-                gsap.from(".about-text p", { scrollTrigger: { trigger: "#about", start: "top 60%" }, y: 30, opacity: 0, stagger: 0.2, duration: 0.8 });
+            // Nav Reveal
+            gsap.to(".header-nav", { scrollTrigger: { trigger: "#hero", start: "bottom top", toggleActions: "play none none reverse" }, opacity: 1 });
 
-                // Specs (Digital Infrastructure) - Using fromTo for robustness
-                gsap.fromTo(".spec-card",
-                    { y: 50, opacity: 0 },
-                    {
-                        y: 0,
-                        opacity: 1,
-                        duration: 0.8,
-                        stagger: 0.2,
-                        scrollTrigger: {
-                            trigger: "#specs",
-                            start: "top 85%",
-                            toggleActions: "play none none reverse"
-                        }
-                    }
-                );
+            // About Animation
+            gsap.from(".about-img-container", { scrollTrigger: { trigger: "#about", start: "top 80%" }, x: -50, opacity: 0, duration: 1 });
+            gsap.from(".about-text p", { scrollTrigger: { trigger: "#about", start: "top 60%" }, y: 30, opacity: 0, stagger: 0.2, duration: 0.8 });
 
-                // Works
-                gsap.from(".work-item", {
-                    scrollTrigger: { trigger: "#works", start: "top 75%" },
-                    y: 30, opacity: 0, stagger: 0.1, duration: 0.8
-                });
-
-                ScrollTrigger.refresh();
-            }, 100);
-        });
-
-        // Lightbox Functionality
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImg = document.getElementById('lightbox-img');
-        const closeBtn = document.getElementById('lightbox-close');
-        const workItems = document.querySelectorAll('.work-item');
-
-        workItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const img = item.querySelector('img');
-                if (img) {
-                    lightboxImg.src = img.src;
-                    lightbox.classList.remove('opacity-0', 'pointer-events-none');
-                    gsap.to(lightboxImg, { scale: 1, duration: 0.5, ease: "power3.out" });
-                }
+            // Specs Animation (The Bug Fix)
+            gsap.from(".spec-card", {
+                scrollTrigger: {
+                    trigger: "#specs",
+                    start: "top 85%", // Trigger slightly earlier to be safe
+                    toggleActions: "play none none reverse"
+                },
+                y: 50,
+                opacity: 0,
+                stagger: 0.2,
+                duration: 1,
+                clearProps: "all" // Ensures it doesn't get stuck hidden
             });
-        });
 
-        const closeLightbox = () => {
-            lightbox.classList.add('opacity-0', 'pointer-events-none');
-            gsap.set(lightboxImg, { scale: 0.9 });
-        };
+            // Lightbox Functionality
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            const closeBtn = document.getElementById('lightbox-close');
+            const workItems = document.querySelectorAll('.work-item');
 
-        closeBtn.addEventListener('click', closeLightbox);
-        lightbox.addEventListener('click', (e) => {
-            if (e.target === lightbox) closeLightbox();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeLightbox();
-        });
+            workItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const img = item.querySelector('img');
+                    if (img) {
+                        lightboxImg.src = img.src;
+                        lightbox.classList.remove('opacity-0', 'pointer-events-none');
+                        gsap.to(lightboxImg, { scale: 1, duration: 0.5, ease: "power3.out" });
+                    }
+                });
+            });
 
+            const closeLightbox = () => {
+                lightbox.classList.add('opacity-0', 'pointer-events-none');
+                gsap.set(lightboxImg, { scale: 0.9 });
+            };
+
+            if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+            if (lightbox) {
+                lightbox.addEventListener('click', (e) => {
+                    if (e.target === lightbox) closeLightbox();
+                });
+            }
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeLightbox();
+            });
+
+        });
     </script>
 </body>
 
