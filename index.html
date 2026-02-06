@@ -331,7 +331,13 @@
                 y: 30,
                 opacity: 0,
                 duration: 0.8,
-                stagger: 0.2
+                stagger: 0.2,
+                onStart: function() {
+                    this.targets().forEach(target => {
+                        // Force a reflow
+                        target.offsetHeight;
+                    });
+                }
             });
 
             ScrollTrigger.refresh();
