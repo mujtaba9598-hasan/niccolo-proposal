@@ -306,41 +306,55 @@
 
     <script>
         const lenis = new Lenis();
-        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
-        requestAnimationFrame(raf);
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time) => {
+            lenis.raf(time * 1000);
+        });
+        gsap.ticker.lagSmoothing(0);
 
         gsap.registerPlugin(ScrollTrigger);
 
         window.addEventListener('load', () => {
-            // Hero
-            const tlHero = gsap.timeline({ scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom center", scrub: 1 } });
-            tlHero.to(".nm-monogram", { scale: 3, opacity: 0, y: -100, filter: "blur(10px)" }, 0);
-            tlHero.to(".hero-bg-img", { scale: 1.2, opacity: 0.3 }, 0);
-            tlHero.to(".hero-text", { opacity: 1, y: -50 }, 0.2);
+            // Delay refresh slightly to ensure layout is stable
+            setTimeout(() => {
 
-            // Nav
-            gsap.to(".header-nav", { scrollTrigger: { trigger: "#hero", start: "bottom top", toggleActions: "play none none reverse" }, opacity: 1 });
+                // Hero
+                const tlHero = gsap.timeline({ scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom center", scrub: 1 } });
+                tlHero.to(".nm-monogram", { scale: 3, opacity: 0, y: -100, filter: "blur(10px)" }, 0);
+                tlHero.to(".hero-bg-img", { scale: 1.2, opacity: 0.3 }, 0);
+                tlHero.to(".hero-text", { opacity: 1, y: -50 }, 0.2);
 
-            // About
-            gsap.from(".about-img-container", { scrollTrigger: { trigger: "#about", start: "top 80%" }, x: -50, opacity: 0, duration: 1 });
-            gsap.from(".about-text p", { scrollTrigger: { trigger: "#about", start: "top 60%" }, y: 30, opacity: 0, stagger: 0.2, duration: 0.8 });
+                // Nav
+                gsap.to(".header-nav", { scrollTrigger: { trigger: "#hero", start: "bottom top", toggleActions: "play none none reverse" }, opacity: 1 });
 
-            // Specs (Digital Infrastructure)
-            gsap.from(".spec-card", {
-                scrollTrigger: { trigger: "#specs", start: "top 85%" },
-                y: 30,
-                opacity: 0,
-                duration: 0.8,
-                stagger: 0.2,
-                onStart: function() {
-                    this.targets().forEach(target => {
-                        // Force a reflow
-                        target.offsetHeight;
-                    });
-                }
-            });
+                // About
+                gsap.from(".about-img-container", { scrollTrigger: { trigger: "#about", start: "top 80%" }, x: -50, opacity: 0, duration: 1 });
+                gsap.from(".about-text p", { scrollTrigger: { trigger: "#about", start: "top 60%" }, y: 30, opacity: 0, stagger: 0.2, duration: 0.8 });
 
-            ScrollTrigger.refresh();
+                // Specs (Digital Infrastructure) - Using fromTo for robustness
+                gsap.fromTo(".spec-card",
+                    { y: 50, opacity: 0 },
+                    {
+                        y: 0,
+                        opacity: 1,
+                        duration: 0.8,
+                        stagger: 0.2,
+                        scrollTrigger: {
+                            trigger: "#specs",
+                            start: "top 85%",
+                            toggleActions: "play none none reverse"
+                        }
+                    }
+                );
+
+                // Works
+                gsap.from(".work-item", {
+                    scrollTrigger: { trigger: "#works", start: "top 75%" },
+                    y: 30, opacity: 0, stagger: 0.1, duration: 0.8
+                });
+
+                ScrollTrigger.refresh();
+            }, 100);
         });
 
         // Lightbox Functionality
